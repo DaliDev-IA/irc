@@ -106,3 +106,29 @@ void	Server::remove_client(int fd)
 		++clientIt;
 	}
 }
+
+bool	Server::is_disconnect_pending(int fd) const
+{
+	return (contains_fd(_pendingDisconnects, fd));
+}
+
+void	Server::mark_pending_disconnect(int fd)
+{
+	if (!is_disconnect_pending(fd))
+		_pendingDisconnects.push_back(fd);
+}
+
+void	Server::process_pending_disconnects()
+{
+	std::vector<int>::size_type i = 0;
+
+	while (i < _pendingDisconnects.size())
+	{
+		int fd = _pendingDisconnects[i];
+
+		i++;
+		disconnect_client(fd, "Connection closed");
+	}
+
+	_pendingDisconnects.clear();
+}

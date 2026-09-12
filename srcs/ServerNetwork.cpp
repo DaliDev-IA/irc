@@ -67,8 +67,14 @@ void	Server::pause_accepting()
 	if (_acceptPaused)
 		return;
 
-	epoll_ctl(_epollFD, EPOLL_CTL_DEL, _socketFD, NULL);
-	_acceptPaused = true;
+	if (epoll_ctl(_epollFD, EPOLL_CTL_DEL, _socketFD, NULL) == 0)
+	{
+		_acceptPaused = true;
+		return;
+	}
+
+	if (errno == ENOENT)
+		_acceptPaused = true;
 }
 
 void	Server::resume_accepting()
@@ -144,6 +150,9 @@ void	Server::receive_client_data(int fd)
 			if (client == NULL)
 				return;
 
+			if (is_disconnect_pending(fd))
+				return;
+
 			if (!client->pop_next_command(line))
 				break;
 
@@ -164,6 +173,9 @@ void	Server::receive_client_data(int fd)
 
 void	Server::queue_message(int fd, const std::string &message)
 {
+	if (is_disconnect_pending(fd))
+		return;
+
 	Client *client = find_client_by_fd(fd);
 
 	if (client == NULL)
@@ -172,11 +184,14 @@ void	Server::queue_message(int fd, const std::string &message)
 	client->append_send_data(message);
 
 	if (!update_client_epoll(fd, true))
-		disconnect_client(fd, "Connection closed");
+		mark_pending_disconnect(fd);
 }
 
 void	Server::send_client_data(int fd)
 {
+	if (is_disconnect_pending(fd))
+		return;
+
 	Client *client = find_client_by_fd(fd);
 
 	if (client == NULL)
@@ -185,7 +200,7 @@ void	Server::send_client_data(int fd)
 	if (!client->has_pending_output())
 	{
 		if (!update_client_epoll(fd, false))
-			disconnect_client(fd, "Connection closed");
+			mark_pending_disconnect(fd);
 		return;
 	}
 
@@ -200,6 +215,6 @@ void	Server::send_client_data(int fd)
 	if (!client->has_pending_output())
 	{
 		if (!update_client_epoll(fd, false))
-			disconnect_client(fd, "Connection closed");
+			mark_pending_disconnect(fd);
 	}
 }

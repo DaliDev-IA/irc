@@ -26,6 +26,7 @@ class Server
 
 		std::vector<Client>		_clients;
 		std::vector<Channel>	_channels;
+		std::vector<int>		_pendingDisconnects;
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
@@ -49,6 +50,10 @@ class Server
 
 		void	disconnect_client(int fd, const std::string &reason);
 		void	remove_client(int fd);
+
+		bool	is_disconnect_pending(int fd) const;
+		void	mark_pending_disconnect(int fd);
+		void	process_pending_disconnects();
 
 		Channel	*find_channel_by_name(const std::string &name);
 		void	remove_channel_if_empty(const std::string &name);
