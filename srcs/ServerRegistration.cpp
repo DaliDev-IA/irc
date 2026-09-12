@@ -2,6 +2,19 @@
 
 #include <sstream>
 
+static bool	contains_fd(const std::vector<int> &fds, int fd)
+{
+	std::vector<int>::size_type i = 0;
+
+	while (i < fds.size())
+	{
+		if (fds[i] == fd)
+			return (true);
+		i++;
+	}
+	return (false);
+}
+
 void	Server::try_register_client(int fd)
 {
 	Client *client = find_client_by_fd(fd);
@@ -103,8 +116,48 @@ void	Server::handle_nick(int fd, const ParsedCommand &command)
 		return;
 	}
 
+	if (!client->is_registered())
+	{
+		client->set_nickname(nickname);
+		try_register_client(fd);
+		return;
+	}
+
+	std::string oldPrefix = client_prefix(*client);
+
 	client->set_nickname(nickname);
-	try_register_client(fd);
+
+	std::string message = oldPrefix + " NICK :" + nickname + "\r\n";
+	std::vector<int> recipients;
+
+	recipients.push_back(fd);
+
+	std::vector<Channel>::size_type channelIndex = 0;
+
+	while (channelIndex < _channels.size())
+	{
+		if (_channels[channelIndex].has_member(fd))
+		{
+			const std::vector<int> &members = _channels[channelIndex].get_members();
+			std::vector<int>::size_type memberIndex = 0;
+
+			while (memberIndex < members.size())
+			{
+				if (!contains_fd(recipients, members[memberIndex]) && find_client_by_fd(members[memberIndex]) != NULL)
+					recipients.push_back(members[memberIndex]);
+				memberIndex++;
+			}
+		}
+		channelIndex++;
+	}
+
+	std::vector<int>::size_type recipientIndex = 0;
+
+	while (recipientIndex < recipients.size())
+	{
+		queue_message(recipients[recipientIndex], message);
+		recipientIndex++;
+	}
 }
 
 void	Server::handle_user(int fd, const ParsedCommand &command)
