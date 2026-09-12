@@ -128,6 +128,9 @@ void	Server::accept_new_client()
 
 void	Server::receive_client_data(int fd)
 {
+	if (is_disconnect_pending(fd))
+		return;
+
 	Client *client = find_client_by_fd(fd);
 
 	if (client == NULL)

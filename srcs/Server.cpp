@@ -111,10 +111,10 @@ void	Server::listening_loop()
 					disconnect_client(currentFD, "Connection closed");
 			}
 
-			process_pending_disconnects();
-
 			i++;
 		}
+
+		process_pending_disconnects();
 	}
 }
 
