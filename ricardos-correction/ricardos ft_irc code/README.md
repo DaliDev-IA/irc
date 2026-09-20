@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by mohchams, rabi-aka.*
+*This project has been created as part of the 42 curriculum by rabi-aka.*
 
 # ft_irc
 
@@ -93,6 +93,6 @@ Rules of the subject that are easy to check in the code:
 ### AI usage
 
 AI (Claude) was used to audit a first version of the project against the
-subject, to design this simpler architecture and write it with us, and to
+subject, to design this simpler architecture and write it with me, and to
 build the test scenarios (partial data, frozen client, flood, valgrind).
-We read, ran and tested every part, and we can explain all of it.
+I read, ran and tested every part, and I can explain all of it.
