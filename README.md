@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by mohchams.*
+*This project has been created as part of the 42 curriculum by mohchams, rabi-aka.*
 
 # ft_irc
 
