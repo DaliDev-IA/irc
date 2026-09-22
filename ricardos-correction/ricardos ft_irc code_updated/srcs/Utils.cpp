@@ -155,6 +155,7 @@ void	Server::disconnect(Client &client, const std::string &reason)
 	while (it != _channels.end())
 	{
 		Channel	&chan = (it++)->second;	// step first, leaveChannel may erase it
+		chan.invited.erase(client.fd);	// a new client may reuse this fd
 		if (chan.has(client.fd))
 			leaveChannel(chan, client.fd);
 	}

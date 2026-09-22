@@ -62,6 +62,7 @@ class Server
 		void	joinOne(Client &client, const std::string &name, const std::string &key);
 		void	cmdPart(Client &client, const Args &args);
 		void	cmdPrivmsg(Client &client, const Args &args);
+		void	privmsgOne(Client &client, const std::string &name, const std::string &text);
 
 		// Operators.cpp : channel operator commands
 		void	cmdTopic(Client &client, const Args &args);

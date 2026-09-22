@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include <cctype>
 
 // called for every complete line received from a client
 void	Server::handleLine(Client &client, const std::string &line)
@@ -192,7 +193,7 @@ void	Server::cmdPart(Client &client, const Args &args)
 	leaveChannel(*chan, client.fd);
 }
 
-// PRIVMSG <nick or #chan> :<text>
+// PRIVMSG <nick or #chan>[,<nick or #chan>] :<text>
 void	Server::cmdPrivmsg(Client &client, const Args &args)
 {
 	if (args.size() < 2)
@@ -200,22 +201,30 @@ void	Server::cmdPrivmsg(Client &client, const Args &args)
 	if (args.size() < 3 || args[2].empty())
 		return (reply(client, "412", ":No text to send"));
 
-	std::string	msg = ":" + client.prefix() + " PRIVMSG " + args[1] + " :" + args[2];
+	Args	targets = split(args[1], ',');
 
-	if (args[1][0] == '#')
+	for (size_t i = 0; i < targets.size(); i++)
+		privmsgOne(client, targets[i], args[2]);
+}
+
+void	Server::privmsgOne(Client &client, const std::string &name, const std::string &text)
+{
+	std::string	msg = ":" + client.prefix() + " PRIVMSG " + name + " :" + text;
+
+	if (name[0] == '#')
 	{
-		Channel	*chan = findChannel(args[1]);
+		Channel	*chan = findChannel(name);
 		if (!chan)
-			return (reply(client, "403", args[1] + " :No such channel"));
+			return (reply(client, "403", name + " :No such channel"));
 		if (!chan->has(client.fd))
-			return (reply(client, "404", args[1] + " :Cannot send to channel"));
+			return (reply(client, "404", name + " :Cannot send to channel"));
 		broadcast(*chan, msg, client.fd);
 	}
 	else
 	{
-		Client	*target = findNick(args[1]);
+		Client	*target = findNick(name);
 		if (!target || !target->registered)
-			return (reply(client, "401", args[1] + " :No such nick"));
+			return (reply(client, "401", name + " :No such nick"));
 		sendTo(*target, msg);
 	}
 }
