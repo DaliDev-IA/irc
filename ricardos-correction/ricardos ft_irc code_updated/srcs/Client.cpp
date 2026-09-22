@@ -7,5 +7,5 @@ Client::Client(int fd, const std::string &host)
 
 std::string	Client::prefix() const
 {
-	return nick + "!" + user + "@" + host;
+	return (nick + "!" + user + "@" + host);
 }
